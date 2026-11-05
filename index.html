@@ -1,0 +1,778 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<title>Mari Kenal Perasaan</title>
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
+<meta name="theme-color" content="#fbf4e6">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" type="image/svg+xml" href="icons/icon.svg">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="Mari Kenal Perasaan">
+<meta name="mobile-web-app-capable" content="yes">
+<style>
+  /* Fredoka, bundled locally — no Google Fonts, no network. */
+  @font-face{
+    font-family:'Fredoka';
+    src:url('fonts/Fredoka-latin-ext.woff2') format('woff2');
+    unicode-range:U+0100-024F,U+0259,U+1E00-1EFF,U+2020,U+20A0-20AB,U+20AD-20CF,U+2113,U+2C60-2C7F,U+A720-A7FF;
+    font-weight:300 700;font-style:normal;font-display:swap;
+  }
+  @font-face{
+    font-family:'Fredoka';
+    src:url('fonts/Fredoka-latin.woff2') format('woff2');
+    unicode-range:U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+    font-weight:300 700;font-style:normal;font-display:swap;
+  }
+
+  :root{
+    --cream:#fbf4e6;
+    --cream-deep:#f4e8d2;
+    --ink:#5e5448;
+    --ink-soft:#8a7d6d;
+    --green:#bfe3c6;
+    --green-deep:#7fb98c;
+    --sun:#ffe9a8;
+  }
+
+  *{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+  html,body{height:100%}
+  body{
+    margin:0;
+    background:var(--cream);
+    color:var(--ink);
+    font-family:'Fredoka','Comic Sans MS',system-ui,-apple-system,Segoe UI,sans-serif;
+    font-weight:500;
+    overflow:hidden;
+    user-select:none;
+    -webkit-user-select:none;
+    touch-action:manipulation;
+  }
+
+  /* Soft background wash — pastel, static, no flashing. */
+  body::before{
+    content:'';
+    position:fixed;inset:0;
+    background:
+      radial-gradient(circle at 12% 8%, #fdeee0 0%, rgba(253,238,224,0) 42%),
+      radial-gradient(circle at 88% 92%, #eaf3ea 0%, rgba(234,243,234,0) 46%);
+    pointer-events:none;
+  }
+
+  .screen{
+    position:fixed;inset:0;
+    display:none;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    padding:calc(14px + env(safe-area-inset-top)) calc(14px + env(safe-area-inset-right))
+            calc(14px + env(safe-area-inset-bottom)) calc(14px + env(safe-area-inset-left));
+    z-index:1;
+  }
+  .screen.on{display:flex}
+
+  /* ---------- mute ---------- */
+  #mute{
+    position:fixed;
+    top:calc(10px + env(safe-area-inset-top));
+    right:calc(10px + env(safe-area-inset-right));
+    width:52px;height:52px;
+    border-radius:50%;
+    border:2px solid #efe1c9;
+    background:#fffdf7;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 0 #ecdcc0;
+    z-index:30;
+    cursor:pointer;
+    padding:0;
+  }
+  #mute:active{transform:scale(.96)}
+  /* pastel speaker, drawn in CSS — no bright emoji red */
+  .spk{position:relative;display:block;width:24px;height:18px}
+  .spk::before{
+    content:'';position:absolute;left:0;top:5px;
+    width:8px;height:8px;border-radius:2px;background:#8a7d6d;
+  }
+  .spk::after{
+    content:'';position:absolute;left:6px;top:1px;
+    border-top:8px solid transparent;
+    border-bottom:8px solid transparent;
+    border-right:11px solid #8a7d6d;
+    border-radius:3px;
+  }
+  #mute::after{
+    content:'';position:absolute;left:50%;top:50%;
+    width:3px;height:28px;margin:-14px 0 0 -1.5px;
+    border-radius:3px;background:#cbb9a3;
+    transform:rotate(-45deg);
+    opacity:0;transition:opacity .2s ease;
+  }
+  #mute.muted::after{opacity:1}
+
+  /* ---------- landing ---------- */
+  .title{
+    font-size:clamp(26px,7vw,46px);
+    font-weight:600;
+    letter-spacing:.2px;
+    text-align:center;
+    margin:0 0 6px;
+  }
+  .subtitle{
+    font-size:clamp(14px,3.4vw,19px);
+    color:var(--ink-soft);
+    text-align:center;
+    margin:0 0 26px;
+    max-width:34ch;
+    line-height:1.45;
+  }
+  .big-btn{
+    font-family:inherit;
+    font-size:clamp(20px,4.6vw,26px);
+    font-weight:600;
+    color:#57493c;
+    background:var(--sun);
+    border:none;
+    border-radius:26px;
+    padding:18px 44px;
+    box-shadow:0 5px 0 #e8cf8a;
+    cursor:pointer;
+    min-width:190px;
+  }
+  .big-btn:active{transform:translateY(3px);box-shadow:0 2px 0 #e8cf8a}
+
+  .faces{
+    display:flex;gap:14px;
+    margin-bottom:24px;
+    font-size:clamp(28px,7vw,40px);
+    line-height:1;
+  }
+  .faces span{display:inline-block;animation:bob 3.2s ease-in-out infinite}
+  .faces span:nth-child(2){animation-delay:.35s}
+  .faces span:nth-child(3){animation-delay:.7s}
+  .faces span:nth-child(4){animation-delay:1.05s}
+  @keyframes bob{0%,100%{transform:translateY(0)}50%{transform:translateY(-6px)}}
+
+  /* ---------- round ---------- */
+  #s-round{
+    justify-content:center;
+    gap:12px;
+    padding-top:calc(66px + env(safe-area-inset-top));
+  }
+  .round-top{
+    display:flex;align-items:center;gap:10px;
+    width:100%;max-width:960px;
+    padding:0 4px;
+  }
+  .round-no{font-size:clamp(13px,3vw,16px);color:var(--ink-soft);white-space:nowrap}
+  .dots{display:flex;gap:6px;flex:1;justify-content:flex-end}
+  .dot{
+    width:9px;height:9px;border-radius:50%;
+    background:#e9dcc6;
+    transition:background .3s ease,transform .3s ease;
+  }
+  .dot.done{background:var(--green-deep)}
+  .dot.now{background:#e2b96a;transform:scale(1.25)}
+
+  .stage{
+    position:relative;
+    width:100%;
+    max-width:960px;
+    flex:0 1 auto;
+    display:flex;
+    align-items:center;
+    justify-content:center;
+    min-height:0;
+  }
+  .frame{
+    position:relative;
+    width:100%;
+    aspect-ratio:16/9;
+    max-height:min(56vh,540px);
+    border-radius:22px;
+    overflow:hidden;
+    background:var(--cream-deep);
+    box-shadow:0 6px 0 #eedfc4, 0 10px 26px rgba(150,130,100,.12);
+  }
+  .frame video{
+    position:absolute;inset:0;
+    width:100%;height:100%;
+    object-fit:cover;
+    background:var(--cream-deep);
+    display:block;
+  }
+  .frame video[hidden]{display:none}
+
+  /* Placeholder animation when a clip is missing or fails to load. */
+  #placeholder{
+    position:absolute;inset:0;
+    display:none;
+    align-items:center;justify-content:center;
+    background:linear-gradient(160deg,#fdf1e2,#f0e7f6);
+  }
+  #placeholder.on{display:flex}
+  .pl-blob{
+    position:absolute;
+    width:58%;height:58%;
+    border-radius:46% 54% 52% 48% / 50% 46% 54% 50%;
+    background:rgba(255,236,199,.85);
+    animation:breathe 5s ease-in-out infinite alternate;
+  }
+  @keyframes breathe{
+    from{transform:scale(.94) rotate(-2deg)}
+    to{transform:scale(1.04) rotate(2deg)}
+  }
+  .pl-face{
+    position:relative;
+    font-size:clamp(48px,13vw,86px);
+    line-height:1;
+    animation:bob 3.4s ease-in-out infinite;
+  }
+
+  /* ---------- question + cards ---------- */
+  .answers{
+    width:100%;
+    max-width:960px;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    gap:8px;
+    opacity:0;
+    transform:translateY(10px);
+    transition:opacity .35s ease,transform .35s ease;
+    pointer-events:none;
+    padding-bottom:4px;
+  }
+  .answers.on{opacity:1;transform:none;pointer-events:auto}
+  .ask{
+    font-size:clamp(15px,3.6vw,21px);
+    font-weight:600;
+    margin:2px 0 4px;
+    text-align:center;
+  }
+  .cards{
+    display:grid;
+    grid-template-columns:repeat(2,minmax(0,1fr));
+    gap:10px;
+    width:100%;
+  }
+  .card{
+    position:relative;
+    font-family:inherit;
+    display:flex;
+    flex-direction:column;
+    align-items:center;
+    justify-content:center;
+    gap:2px;
+    padding:12px 6px;
+    border:none;
+    border-radius:18px;
+    box-shadow:0 4px 0 rgba(150,130,100,.16);
+    color:#5b4f42;
+    cursor:pointer;
+    overflow:hidden;
+    transition:transform .16s ease,box-shadow .16s ease,opacity .3s ease;
+    min-height:74px;
+  }
+  .card:active:not([disabled]){transform:translateY(2px);box-shadow:0 2px 0 rgba(150,130,100,.16)}
+  .card .emoji{font-size:clamp(22px,6vw,30px);line-height:1.1}
+  .card .label{font-size:clamp(14px,3.6vw,19px);font-weight:600}
+  .card[data-emotion="gembira"]{background:#ffeab0}
+  .card[data-emotion="sedih"]{background:#d3e5f8}
+  .card[data-emotion="marah"]{background:#ffd9cf}
+  .card[data-emotion="takut"]{background:#e0d6f3}
+
+  .card.wrong{opacity:.62;box-shadow:none}
+  .card.wrong .cross{opacity:1;transform:scale(1)}
+  .cross{
+    position:absolute;
+    inset:0;
+    display:flex;align-items:center;justify-content:center;
+    opacity:0;
+    transform:scale(.7);
+    transition:opacity .3s ease,transform .3s ease;
+    pointer-events:none;
+  }
+  .cross::before,
+  .cross::after{
+    content:'';
+    position:absolute;
+    width:64%;height:8px;
+    border-radius:6px;
+    background:rgba(216,124,116,.42);
+  }
+  .cross::before{transform:rotate(45deg)}
+  .cross::after{transform:rotate(-45deg)}
+
+  .card.right{background:var(--green);animation:pop .5s ease}
+  @keyframes pop{
+    0%{transform:scale(1)}
+    35%{transform:scale(1.06)}
+    60%{transform:scale(.985)}
+    100%{transform:scale(1)}
+  }
+  .card[disabled]{cursor:default}
+
+  .praise{
+    height:24px;
+    font-size:clamp(14px,3.4vw,18px);
+    color:var(--green-deep);
+    font-weight:600;
+    text-align:center;
+    opacity:0;
+    transition:opacity .25s ease;
+  }
+  .praise.on{opacity:1}
+
+  /* ---------- win ---------- */
+  #s-win .praise-big{font-size:clamp(30px,8vw,52px);font-weight:600;margin:0 0 8px}
+  .win-sub{font-size:clamp(15px,3.8vw,20px);color:var(--ink-soft);margin:0 0 22px;text-align:center}
+  .stars{font-size:clamp(26px,7vw,38px);margin-bottom:18px;letter-spacing:6px}
+
+  /* ---------- landscape / wide ---------- */
+  @media (orientation:landscape) and (min-width:560px){
+    #s-round{
+      padding-top:calc(20px + env(safe-area-inset-top));
+      justify-content:center;
+      padding-left:calc(14px + env(safe-area-inset-left));
+    }
+    .round-top{padding-left:calc(52px + env(safe-area-inset-left));max-width:1100px}
+    .stage{max-width:1100px;flex:1 1 auto}
+    .frame{width:auto;height:100%;aspect-ratio:16/9;max-height:100%;max-width:none}
+    .answers{max-width:1100px}
+    .cards{grid-template-columns:repeat(4,minmax(0,1fr))}
+    .ask{margin-top:0}
+  }
+  @media (orientation:landscape) and (max-height:420px){
+    .card{padding:8px 4px;min-height:56px}
+    .praise{height:18px}
+  }
+
+  /* confetti canvas */
+  #confetti{
+    position:fixed;inset:0;
+    width:100%;height:100%;
+    pointer-events:none;
+    z-index:20;
+  }
+</style>
+</head>
+<body>
+
+<button id="mute" aria-label="Bisukan bunyi" title="Bisukan bunyi"><span class="spk" aria-hidden="true"></span></button>
+<canvas id="confetti" aria-hidden="true"></canvas>
+
+<!-- ============ LANDING ============ -->
+<section class="screen on" id="s-land">
+  <div class="faces" aria-hidden="true"><span>😊</span><span>😢</span><span>😠</span><span>😨</span></div>
+  <h1 class="title">Mari Kenal Perasaan</h1>
+  <p class="subtitle">Tengok cerita, kemudian pilih perasaan yang betul.</p>
+  <button class="big-btn" id="startBtn">Mula Main</button>
+</section>
+
+<!-- ============ ROUND ============ -->
+<section class="screen" id="s-round">
+  <div class="round-top">
+    <span class="round-no" id="roundNo">Pusingan 1 / 8</span>
+    <div class="dots" id="dots"></div>
+  </div>
+
+  <div class="stage">
+    <div class="frame">
+      <video id="video" playsinline webkit-playsinline preload="auto" muted></video>
+      <div id="placeholder" aria-hidden="true">
+        <div class="pl-blob"></div>
+        <div class="pl-face" id="plFace">😊</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="answers" id="answers">
+    <p class="ask">Apakah perasaan ini?</p>
+    <div class="cards" id="cards">
+      <button class="card" data-emotion="gembira"><span class="emoji">😊</span><span class="label">Gembira</span><span class="cross"></span></button>
+      <button class="card" data-emotion="sedih"><span class="emoji">😢</span><span class="label">Sedih</span><span class="cross"></span></button>
+      <button class="card" data-emotion="marah"><span class="emoji">😠</span><span class="label">Marah</span><span class="cross"></span></button>
+      <button class="card" data-emotion="takut"><span class="emoji">😨</span><span class="label">Takut</span><span class="cross"></span></button>
+    </div>
+    <div class="praise" id="praise">Betul! Syabas.</div>
+  </div>
+</section>
+
+<!-- ============ WIN ============ -->
+<section class="screen" id="s-win">
+  <div class="stars" aria-hidden="true">🌟 ⭐ 🌟</div>
+  <h1 class="praise-big">Tahniah!</h1>
+  <p class="win-sub">Kamu kenal semua perasaan.</p>
+  <button class="big-btn" id="againBtn">Main Lagi</button>
+</section>
+
+<script>
+(function(){
+  'use strict';
+
+  /* ---------------------------------------------------------------
+     Rounds. Each clip is bundled in the APK under videos/.
+     --------------------------------------------------------------- */
+  var ROUNDS = [
+    { file:'videos/happy1.mp4',  answer:'gembira', face:'😊' },
+    { file:'videos/sad1.mp4',    answer:'sedih',   face:'😢' },
+    { file:'videos/angry1.mp4',  answer:'marah',   face:'😠' },
+    { file:'videos/scared1.mp4', answer:'takut',   face:'😨' },
+    { file:'videos/angry2.mp4',  answer:'marah',   face:'😠' },
+    { file:'videos/happy2.mp4',  answer:'gembira', face:'😊' },
+    { file:'videos/scared2.mp4', answer:'takut',   face:'😨' },
+    { file:'videos/sad2.mp4',    answer:'sedih',   face:'😢' }
+  ];
+
+  var AUTOPLAY_MS = 2000;        /* pause after a correct answer */
+  var FALLBACK_HOLD_MS = 3200;   /* placeholder shown, then the cards open */
+
+  var el = {
+    land: document.getElementById('s-land'),
+    round: document.getElementById('s-round'),
+    win: document.getElementById('s-win'),
+    start: document.getElementById('startBtn'),
+    again: document.getElementById('againBtn'),
+    video: document.getElementById('video'),
+    placeholder: document.getElementById('placeholder'),
+    plFace: document.getElementById('plFace'),
+    answers: document.getElementById('answers'),
+    cards: document.getElementById('cards'),
+    praise: document.getElementById('praise'),
+    roundNo: document.getElementById('roundNo'),
+    dots: document.getElementById('dots'),
+    mute: document.getElementById('mute'),
+    confetti: document.getElementById('confetti')
+  };
+  var cardList = Array.prototype.slice.call(el.cards.querySelectorAll('.card'));
+
+  var muted = false;
+  var round = 0;
+  var locked = true;
+  var answered = false;
+  var fallbackTimer = null;
+  var advanceTimer = null;
+  var playing = false;
+
+  /* ---------------------------------------------------------------
+     Sound: gentle WebAudio tones only, nothing harsh, nothing loud.
+     --------------------------------------------------------------- */
+  var audioCtx = null;
+  function ctx(){
+    if (!audioCtx) {
+      var AC = window.AudioContext || window.webkitAudioContext;
+      if (!AC) return null;
+      try { audioCtx = new AC(); } catch (e) { return null; }
+    }
+    if (audioCtx.state === 'suspended') { audioCtx.resume(); }
+    return audioCtx;
+  }
+  function tone(freq, start, dur, peak){
+    var c = ctx();
+    if (!c || muted) return;
+    var osc = c.createOscillator();
+    var gain = c.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(freq, c.currentTime + start);
+    gain.gain.setValueAtTime(0.0001, c.currentTime + start);
+    gain.gain.exponentialRampToValueAtTime(peak, c.currentTime + start + 0.05);
+    gain.gain.exponentialRampToValueAtTime(0.0001, c.currentTime + start + dur);
+    osc.connect(gain).connect(c.destination);
+    osc.start(c.currentTime + start);
+    osc.stop(c.currentTime + start + dur + 0.05);
+  }
+  function softThud(){ tone(300, 0, 0.26, 0.05); tone(228, 0.03, 0.3, 0.035); }
+  function softChime(){ tone(659.25, 0, 0.5, 0.055); tone(987.77, 0.11, 0.6, 0.045); }
+
+  /* ---------------------------------------------------------------
+     Mute — affects the videos and the tones.
+     --------------------------------------------------------------- */
+  function applyMute(){
+    el.video.muted = muted;
+    el.mute.classList.toggle('muted', muted);
+    el.mute.setAttribute('aria-label', muted ? 'Hidupkan bunyi' : 'Bisukan bunyi');
+  }
+  el.mute.addEventListener('click', function(){
+    muted = !muted;
+    applyMute();
+  });
+
+  /* ---------------------------------------------------------------
+     Screens
+     --------------------------------------------------------------- */
+  function show(which){
+    el.land.classList.remove('on');
+    el.round.classList.remove('on');
+    el.win.classList.remove('on');
+    which.classList.add('on');
+  }
+
+  function buildDots(){
+    el.dots.innerHTML = '';
+    for (var i = 0; i < ROUNDS.length; i++) {
+      var d = document.createElement('span');
+      d.className = 'dot';
+      el.dots.appendChild(d);
+    }
+  }
+  function paintDots(){
+    var dots = el.dots.children;
+    for (var i = 0; i < dots.length; i++) {
+      dots[i].className = 'dot' + (i < round ? ' done' : (i === round ? ' now' : ''));
+    }
+  }
+
+  /* ---------------------------------------------------------------
+     Round lifecycle
+     --------------------------------------------------------------- */
+  function resetCards(){
+    cardList.forEach(function(c){
+      c.disabled = false;
+      c.classList.remove('wrong', 'right');
+    });
+    el.praise.classList.remove('on');
+    el.answers.classList.remove('on');
+    answered = false;
+    locked = true;
+  }
+
+  function openAnswers(){
+    if (answered) return;
+    locked = false;
+    el.answers.classList.add('on');
+  }
+
+  function startRound(){
+    clearTimeout(fallbackTimer);
+    clearTimeout(advanceTimer);
+    stopConfetti();
+
+    var r = ROUNDS[round];
+    el.roundNo.textContent = 'Pusingan ' + (round + 1) + ' / ' + ROUNDS.length;
+    paintDots();
+    resetCards();
+
+    /* Placeholder first: it is swapped out once the clip actually plays. */
+    el.placeholder.classList.remove('on');
+    el.plFace.textContent = r.face;
+    el.video.hidden = false;
+    el.video.muted = muted;
+    el.video.src = r.file;
+    el.video.loop = false;
+    el.video.load();
+
+    var state = 'loading';
+
+    function onPlayable(){
+      if (state === 'ended' || state === 'failed') return;
+      state = 'playing';
+      clearTimeout(fallbackTimer);
+      el.placeholder.classList.remove('on');
+      el.video.hidden = false;
+    }
+    function onEnded(){
+      if (state === 'ended') return;
+      state = 'ended';
+      openAnswers();
+    }
+    function onFail(){
+      if (state === 'ended' || state === 'failed') return;
+      state = 'failed';
+      clearTimeout(fallbackTimer);
+      playing = false;
+      /* Missing or unplayable clip: keep the app usable. */
+      el.video.hidden = true;
+      el.placeholder.classList.add('on');
+      fallbackTimer = setTimeout(openAnswers, FALLBACK_HOLD_MS);
+    }
+
+    el.video.onplaying = onPlayable;
+    el.video.onloadeddata = onPlayable;
+    el.video.oncanplay = onPlayable;
+    el.video.ontimeupdate = onPlayable;
+    el.video.onended = onEnded;
+    el.video.onerror = onFail;
+
+    /* Watchdog: give up only when the clip really has not started. A software
+       decoder on a slow device can take a few seconds to produce a frame. */
+    fallbackTimer = setTimeout(function(){
+      if (state !== 'loading') return;
+      if (el.video.readyState >= 2 || el.video.currentTime > 0) { onPlayable(); return; }
+      onFail();
+    }, 7000);
+
+    playing = true;
+    var p = el.video.play();
+    if (p && typeof p.catch === 'function') {
+      p.catch(function(){ onFail(); });
+    }
+  }
+
+  function finishAll(){
+    playing = false;
+    try { el.video.pause(); } catch (e) {}
+    var dots = el.dots.children;
+    for (var i = 0; i < dots.length; i++) { dots[i].className = 'dot done'; }
+    show(el.win);
+    confetti(90);
+  }
+
+  function nextRound(){
+    if (round >= ROUNDS.length - 1) { finishAll(); return; }
+    round++;
+    startRound();
+  }
+
+  /* ---------------------------------------------------------------
+     Answers
+     --------------------------------------------------------------- */
+  cardList.forEach(function(card){
+    card.addEventListener('click', function(){
+      if (locked || answered || card.disabled) return;
+
+      if (card.getAttribute('data-emotion') !== ROUNDS[round].answer) {
+        /* Wrong: soft sound, permanent soft red cross, disabled. */
+        softThud();
+        card.classList.add('wrong');
+        card.disabled = true;
+        return;
+      }
+
+      /* Correct: chime, green bounce, confetti, 2 s pause, then advance. */
+      answered = true;
+      locked = true;
+      softChime();
+      card.classList.add('right');
+      el.praise.classList.add('on');
+      confetti();
+      advanceTimer = setTimeout(function(){ nextRound(); }, AUTOPLAY_MS);
+    });
+  });
+
+  /* ---------------------------------------------------------------
+     Confetti — pastel, slow, one gentle burst. No flashing.
+     --------------------------------------------------------------- */
+  var canvas = el.confetti;
+  var c2d = canvas.getContext('2d');
+  var bits = [];
+  var raf = null;
+  var COLORS = ['#ffe9a8', '#f7d3d8', '#cfe3f7', '#d9e9cf', '#e6dcf6', '#f9dcc0'];
+
+  function sizeCanvas(){
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width = Math.floor(window.innerWidth * dpr);
+    canvas.height = Math.floor(window.innerHeight * dpr);
+    c2d.setTransform(dpr, 0, 0, dpr, 0, 0);
+  }
+  sizeCanvas();
+  window.addEventListener('resize', sizeCanvas);
+
+  function confetti(count){
+    var n = count || 46;
+    var w = window.innerWidth, h = window.innerHeight;
+    for (var i = 0; i < n; i++) {
+      bits.push({
+        x: w / 2 + (Math.random() - 0.5) * w * 0.35,
+        y: h * 0.34 + (Math.random() - 0.5) * 40,
+        vx: (Math.random() - 0.5) * 2.1,
+        vy: -1.6 - Math.random() * 1.9,
+        w: 7 + Math.random() * 7,
+        h: 5 + Math.random() * 7,
+        rot: Math.random() * Math.PI,
+        vr: (Math.random() - 0.5) * 0.16,
+        life: 1,
+        color: COLORS[(Math.random() * COLORS.length) | 0]
+      });
+    }
+    if (!raf) { raf = requestAnimationFrame(step); }
+  }
+
+  function step(){
+    c2d.clearRect(0, 0, window.innerWidth, window.innerHeight);
+    for (var i = bits.length - 1; i >= 0; i--) {
+      var b = bits[i];
+      b.vy += 0.028;
+      b.vx *= 0.995;
+      b.x += b.vx;
+      b.y += b.vy;
+      b.rot += b.vr;
+      b.life -= 0.006;
+      if (b.life <= 0 || b.y > window.innerHeight + 40) { bits.splice(i, 1); continue; }
+      c2d.save();
+      c2d.globalAlpha = Math.max(0, Math.min(1, b.life));
+      c2d.translate(b.x, b.y);
+      c2d.rotate(b.rot);
+      c2d.fillStyle = b.color;
+      c2d.beginPath();
+      c2d.moveTo(-b.w / 2 + 2, -b.h / 2);
+      c2d.lineTo(b.w / 2 - 2, -b.h / 2);
+      c2d.quadraticCurveTo(b.w / 2, -b.h / 2, b.w / 2, -b.h / 2 + 2);
+      c2d.lineTo(b.w / 2, b.h / 2 - 2);
+      c2d.quadraticCurveTo(b.w / 2, b.h / 2, b.w / 2 - 2, b.h / 2);
+      c2d.lineTo(-b.w / 2 + 2, b.h / 2);
+      c2d.quadraticCurveTo(-b.w / 2, b.h / 2, -b.w / 2, b.h / 2 - 2);
+      c2d.lineTo(-b.w / 2, -b.h / 2 + 2);
+      c2d.quadraticCurveTo(-b.w / 2, -b.h / 2, -b.w / 2 + 2, -b.h / 2);
+      c2d.fill();
+      c2d.restore();
+    }
+    if (bits.length) {
+      raf = requestAnimationFrame(step);
+    } else {
+      c2d.clearRect(0, 0, window.innerWidth, window.innerHeight);
+      raf = null;
+    }
+  }
+
+  function stopConfetti(){
+    bits.length = 0;
+    if (raf) { cancelAnimationFrame(raf); raf = null; }
+    c2d.clearRect(0, 0, window.innerWidth, window.innerHeight);
+  }
+
+  /* ---------------------------------------------------------------
+     Start / restart
+     --------------------------------------------------------------- */
+  function begin(){
+    round = 0;
+    buildDots();
+    applyMute();
+    show(el.round);
+    startRound();
+  }
+
+  el.start.addEventListener('click', function(){
+    ctx();                 /* unlock audio on this tap */
+    begin();
+  });
+
+  el.again.addEventListener('click', function(){
+    ctx();
+    begin();
+  });
+
+  document.addEventListener('visibilitychange', function(){
+    if (document.hidden) {
+      try { el.video.pause(); } catch (e) {}
+    } else if (playing && !answered) {
+      var p = el.video.play();
+      if (p && p.catch) { p.catch(function(){}); }
+    }
+  });
+
+  buildDots();
+  applyMute();
+})();
+</script>
+<script>
+  /* PWA: register service worker for offline play. No-op if unsupported. */
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function(){
+      navigator.serviceWorker.register('service-worker.js').catch(function(){});
+    });
+  }
+</script>
+</body>
+</html>

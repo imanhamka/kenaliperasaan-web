@@ -1,0 +1,17 @@
+{
+  "name": "Mari Kenal Perasaan",
+  "short_name": "Mari Kenal Perasaan",
+  "lang": "ms",
+  "description": "Permainan kenal emosi untuk kanak-kanak — tonton klip, pilih perasaan yang betul.",
+  "start_url": ".",
+  "scope": ".",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#fbf4e6",
+  "theme_color": "#fbf4e6",
+  "icons": [
+    { "src": "icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    { "src": "icons/icon-maskable-512.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+  ]
+}
